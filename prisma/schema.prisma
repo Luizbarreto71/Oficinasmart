@@ -1,0 +1,909 @@
+// Oficina do Smartphone — banco de dados
+// Uma única variável de ambiente: DATABASE_URL
+
+generator client {
+  provider      = "prisma-client-js"
+  // "rhel-openssl-3.0.x" é o runtime das funções serverless da Vercel.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  GERENTE
+  /// Opera o PDV: recebe pré-vendas, cobra e finaliza. Não mexe em cadastro.
+  CAIXA
+  /// Monta pré-vendas. Nunca dá baixa em estoque nem finaliza venda.
+  VENDEDOR
+}
+
+/// Como o produto é controlado no estoque.
+enum TipoControle {
+  /// Cada aparelho físico é uma linha (DeviceUnit) com IMEI, série, bateria…
+  UNITARIO
+  /// Só um saldo por unidade. Acessórios, peças, serviços.
+  QUANTIDADE
+}
+
+/// Situação de um aparelho físico (DeviceUnit).
+enum DeviceStatus {
+  EM_ESTOQUE
+  RESERVADO
+  EM_TRANSITO
+  VENDIDO
+  DEFEITO
+  DEVOLVIDO
+}
+
+/// Situação de uma pré-venda, do vendedor até o caixa.
+enum PreSaleStatus {
+  AGUARDANDO_CAIXA
+  EM_ATENDIMENTO
+  FINALIZADA
+  CANCELADA
+  EXPIRADA
+}
+
+enum SaleStatus {
+  FINALIZADA
+  CANCELADA
+}
+
+enum CashRegisterStatus {
+  ABERTO
+  FECHADO
+}
+
+enum ProductStatus {
+  EM_ESTOQUE
+  RESERVADO
+  VENDIDO
+}
+
+enum MovementType {
+  ENTRADA
+  SAIDA
+  TRANSFERENCIA
+  AJUSTE
+}
+
+/// Por que o estoque se mexeu. Separado do tipo porque uma saída pode ser
+/// venda, perda, defeito… e o relatório precisa distinguir.
+enum MovementReason {
+  COMPRA
+  CADASTRO
+  VENDA
+  DEFEITO
+  DEVOLUCAO_FORNECEDOR
+  PERDA
+  USO_INTERNO
+  AJUSTE
+  TRANSFERENCIA
+  RETIRADA
+  CANCELAMENTO
+  EXCLUSAO
+  OUTRO
+}
+
+/// Situação de uma retirada para a loja.
+enum WithdrawalStatus {
+  PENDENTE
+  APROVADA
+  CANCELADA
+}
+
+enum TransferStatus {
+  PENDENTE
+  EM_TRANSITO
+  RECEBIDA
+  CANCELADA
+}
+
+enum ImeiSituacao {
+  NAO_CONSULTADO
+  REGULAR
+  IRREGULAR
+  BLOQUEADO
+}
+
+enum TradeInStatus {
+  /// Avaliada pelo vendedor, ainda não passou pelo caixa.
+  AVALIADA
+  /// Virou venda: o aparelho é da loja.
+  ACEITA
+  RECUSADA
+}
+
+enum TradeInFotoTipo {
+  ANATEL
+  DOCUMENTO
+  APARELHO
+}
+
+enum PaymentMethod {
+  PIX
+  DINHEIRO
+  DEBITO
+  CREDITO
+  TRANSFERENCIA
+  /// Aparelho recebido na troca. O caixa nunca escolhe à mão.
+  TROCA
+  /// Fiado: o cliente levou e vai pagar depois.
+  EM_ABERTO
+  OUTRO
+}
+
+/// Loja, Estoque… Cada uma tem seu estoque, que nunca se mistura.
+model Unit {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  /// MATRIZ ou FILIAL — só para exibição e ordenação.
+  type      String   @default("FILIAL")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stock        Stock[]
+  movements    StockMovement[]
+  sales        Sale[]
+  users        User[]
+  devices      DeviceUnit[]
+  transfersOut StockTransfer[]   @relation("origem")
+  transfersIn  StockTransfer[]   @relation("destino")
+  withdrawals  StockWithdrawal[]
+  tradeIns     TradeIn[]
+  PreSale      PreSale[]
+  CashRegister CashRegister[]
+
+  @@map("units")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(VENDEDOR)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Gerente e Vendedor enxergam só esta unidade. Administrador vê todas.
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  /// Foto de perfil, guardada aqui porque é uma por pessoa e some junto com a conta.
+  foto         Bytes?
+  fotoMimeType String?
+
+  movements StockMovement[]
+  auditLogs AuditLog[]
+
+  vendasComoVendedor Sale[]         @relation("vendedor")
+  vendasComoCaixa    Sale[]         @relation("caixa")
+  preVendasCriadas   PreSale[]      @relation("vendedorPreVenda")
+  preVendasAtendidas PreSale[]      @relation("caixaPreVenda")
+  turnosDeCaixa      CashRegister[] @relation("turnoDoCaixa")
+  notificacoes       Notification[]
+  tradeIns           TradeIn[]      @relation("vendedorTroca")
+
+  @@index([unitId])
+  @@map("users")
+}
+
+model Category {
+  id     String  @id @default(uuid())
+  name   String  @unique
+  slug   String  @unique
+  color  String?
+  /// Quais campos aparecem no formulário desta categoria (ver shared/campos.ts).
+  campos Json?
+  /// Tipo de controle sugerido para produtos novos desta categoria.
+  tipoControlePadrao TipoControle @default(QUANTIDADE)
+
+  /// Subcategoria: "Smartphones › Vitrine". Um nível só.
+  parentId String?
+  parent   Category?  @relation("subcategorias", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("subcategorias")
+
+  ordem Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  document  String?
+  address   String?
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+
+  @@index([name])
+  @@map("suppliers")
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  document  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales    Sale[]
+  tradeIns TradeIn[]
+  PreSale  PreSale[]
+
+  @@index([name])
+  @@index([phone])
+  @@map("customers")
+}
+
+model Product {
+  id               String        @id @default(uuid())
+  name             String
+  brand            String?
+  model            String?
+  color            String?
+  capacity         String?
+  /// Memória RAM, quando faz sentido (smartphones, notebooks).
+  ram              String?
+  lote             String?
+  /// Estado padrão do produto por quantidade: Lacrado, Novo, Recondicionado…
+  /// Para produtos UNITARIO a condição de verdade vive no DeviceUnit.
+  condicao         String?
+  /// Como o produto é controlado no estoque.
+  tipoControle     TipoControle  @default(QUANTIDADE)
+  /// Serviço/mão de obra: entra na venda mas não movimenta estoque físico.
+  semEstoque       Boolean       @default(false)
+  /// Garantia da loja sugerida ao dar entrada de um aparelho novo, em dias.
+  garantiaPadraoDias Int?
+
+  /// Estoque mínimo por unidade — abaixo disso entra no alerta.
+  minQuantity      Int           @default(1)
+  /// Custo médio ponderado (produtos QUANTIDADE) ou média dos aparelhos em
+  /// estoque (produtos UNITARIO). É ele que vale para margem e valor do estoque.
+  costPrice        Decimal       @default(0) @db.Decimal(12, 2)
+  /// Quanto foi pago na compra mais recente. Serve para comparar, não para calcular.
+  lastPurchaseCost Decimal?      @db.Decimal(12, 2)
+  lastPurchaseAt   DateTime?
+  salePrice        Decimal       @default(0) @db.Decimal(12, 2)
+  /// Preço para atacado. Vazio = o produto só é vendido no varejo.
+  wholesalePrice   Decimal?      @db.Decimal(12, 2)
+  /// Aparelho usado que a loja recebeu — de troca ou comprado direto.
+  seminovo         Boolean       @default(false)
+  seminovoOrigem   String?
+
+  /// Identificadores do produto QUANTIDADE (para UNITARIO ficam no DeviceUnit).
+  imei             String?
+  serialNumber     String?
+  barcode          String?
+  notes            String?
+  status           ProductStatus @default(EM_ESTOQUE)
+  entryDate        DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  /// A peça da troca que virou este produto.
+  tradeInAparelhoId String?          @unique
+  tradeInAparelho   TradeInAparelho? @relation(fields: [tradeInAparelhoId], references: [id], onDelete: SetNull)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  /// A quantidade vive aqui, uma linha por unidade. Nunca no produto.
+  stock        Stock[]
+  devices      DeviceUnit[]
+  photos       ProductPhoto[]
+  tradeIns     TradeIn[]
+  saleItems    SaleItem[]
+  preSaleItems PreSaleItem[]
+  movements    StockMovement[]
+  transfers    StockTransfer[]
+  withdrawals  StockWithdrawal[]
+
+  @@index([name])
+  @@index([brand])
+  @@index([model])
+  @@index([imei])
+  @@index([serialNumber])
+  @@index([barcode])
+  @@index([lote])
+  @@index([condicao])
+  @@index([status])
+  @@index([tipoControle])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@map("products")
+}
+
+/// Um aparelho físico de um produto UNITARIO. Para produtos QUANTIDADE não existe.
+///
+/// O `Stock.quantity` de um produto UNITARIO numa unidade é o número de
+/// DeviceUnit com status EM_ESTOQUE naquela unidade — mantido em sincronia
+/// dentro das mesmas transações que movimentam o estoque.
+model DeviceUnit {
+  id        String       @id @default(uuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  /// Onde o aparelho está fisicamente. Não muda ao vender (histórico); muda na transferência.
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  /// Único no banco: é o que impede cadastrar o mesmo aparelho duas vezes.
+  imei         String?      @unique
+  /// Segundo slot dual-SIM. Não força unicidade — nem todo aparelho tem.
+  imei2        String?
+  serialNumber String?
+  status       DeviceStatus @default(EM_ESTOQUE)
+
+  /// Novo/Lacrado, Vitrine, Seminovo, Usado — texto com sugestões da categoria.
+  condicao      String?
+  /// Saúde da bateria em % (0–100), quando aplicável.
+  batteryHealth Int?
+  /// Fim da garantia da loja para este aparelho.
+  warrantyUntil DateTime?
+
+  /// Custo deste aparelho. Congela no SaleItem ao vender.
+  costPrice Decimal  @default(0) @db.Decimal(12, 2)
+  /// Preço pedido específico deste aparelho; vazio = usa o do Product.
+  salePrice Decimal? @db.Decimal(12, 2)
+
+  imeiSituacao  ImeiSituacao @default(NAO_CONSULTADO)
+  imeiCheckedAt DateTime?
+
+  notes     String?
+  entryDate DateTime @default(now())
+
+  /// Linha de venda que consumiu este aparelho.
+  saleItemId String?   @unique
+  saleItem   SaleItem? @relation(fields: [saleItemId], references: [id], onDelete: SetNull)
+
+  /// Rastro para seminovo vindo de troca.
+  tradeInAparelhoId String?          @unique
+  tradeInAparelho   TradeInAparelho? @relation("aparelhoDoDevice", fields: [tradeInAparelhoId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@index([unitId])
+  @@index([status])
+  @@index([serialNumber])
+  @@map("device_units")
+}
+
+/// Aparelho usado recebido como parte do pagamento.
+model TradeIn {
+  id     String        @id @default(uuid())
+  /// Número visível: TR-000001.
+  code   String        @unique
+  status TradeInStatus @default(AVALIADA)
+
+  // ----- o aparelho que entra
+  modelo        String
+  marca         String?
+  armazenamento String?
+  cor           String?
+  imei          String?
+  imeiSituacao  ImeiSituacao @default(NAO_CONSULTADO)
+  imeiCheckedAt DateTime?
+
+  estado      String?
+  /// Chaves de shared/trocas.ts — bateria, tela, traseira…
+  defeitos    String[]
+  observacoes String?
+
+  /// Quanto a loja aceitou pagar pelo aparelho usado.
+  valorAvaliado Decimal @db.Decimal(12, 2)
+
+  // ----- o aparelho que sai
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  saidaNome  String?
+  valorSaida Decimal  @default(0) @db.Decimal(12, 2)
+
+  // ----- o cliente
+  customerId       String?
+  customer         Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName     String
+  customerPhone    String?
+  customerDocument String?
+
+  aparelhos TradeInAparelho[]
+
+  sellerId String
+  seller   User   @relation("vendedorTroca", fields: [sellerId], references: [id])
+
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  preSaleId String?  @unique
+  preSale   PreSale? @relation(fields: [preSaleId], references: [id], onDelete: SetNull)
+
+  saleId String? @unique
+  sale   Sale?   @relation(fields: [saleId], references: [id], onDelete: SetNull)
+
+  estoqueProductId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  photos TradeInPhoto[]
+
+  @@index([status])
+  @@index([sellerId])
+  @@index([imei])
+  @@index([createdAt])
+  @@map("trade_ins")
+}
+
+/// Cada aparelho que o cliente deixou na troca.
+model TradeInAparelho {
+  id String @id @default(uuid())
+
+  modelo        String
+  marca         String?
+  armazenamento String?
+  cor           String?
+  imei          String?
+  imeiSituacao  ImeiSituacao @default(NAO_CONSULTADO)
+  imeiCheckedAt DateTime?
+
+  estado      String?
+  defeitos    String[]
+  observacoes String?
+
+  valorAvaliado Decimal @db.Decimal(12, 2)
+
+  ordem Int @default(0)
+
+  tradeInId String
+  tradeIn   TradeIn @relation(fields: [tradeInId], references: [id], onDelete: Cascade)
+
+  fotos TradeInPhoto[]
+
+  /// O produto de estoque criado a partir deste aparelho.
+  produto Product?
+  /// O aparelho físico (DeviceUnit) criado a partir deste.
+  device  DeviceUnit? @relation("aparelhoDoDevice")
+
+  @@index([tradeInId])
+  @@map("trade_in_aparelhos")
+}
+
+model TradeInPhoto {
+  id        String          @id @default(uuid())
+  tipo      TradeInFotoTipo @default(APARELHO)
+  data      Bytes
+  mimeType  String          @default("image/jpeg")
+  createdAt DateTime        @default(now())
+
+  tradeInId String
+  tradeIn   TradeIn @relation(fields: [tradeInId], references: [id], onDelete: Cascade)
+
+  aparelhoId String?
+  aparelho   TradeInAparelho? @relation(fields: [aparelhoId], references: [id], onDelete: Cascade)
+
+  @@index([tradeInId])
+  @@index([aparelhoId])
+  @@map("trade_in_photos")
+}
+
+model ProductPhoto {
+  id        String   @id @default(uuid())
+  data      Bytes
+  mimeType  String   @default("image/jpeg")
+  createdAt DateTime @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_photos")
+}
+
+/// Venda concluída. Só o caixa cria — é aqui que o estoque baixa.
+model Sale {
+  id     String     @id @default(uuid())
+  /// Número visível: VD-000001.
+  code   String     @unique
+  status SaleStatus @default(FINALIZADA)
+
+  totalAmount Decimal @db.Decimal(12, 2)
+  costAmount  Decimal @default(0) @db.Decimal(12, 2)
+  /// Cobrado além do preço dos produtos — o repasse da taxa do cartão.
+  surcharge   Decimal @default(0) @db.Decimal(12, 2)
+
+  paymentMethod PaymentMethod
+  installments  Int           @default(1)
+
+  saleDate  DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  preSaleId String?  @unique
+  preSale   PreSale? @relation(fields: [preSaleId], references: [id], onDelete: SetNull)
+
+  sellerId   String?
+  seller     User?   @relation("vendedor", fields: [sellerId], references: [id], onDelete: SetNull)
+  sellerName String?
+  cashierId  String?
+  cashier    User?   @relation("caixa", fields: [cashierId], references: [id], onDelete: SetNull)
+
+  cashRegisterId String?
+  cashRegister   CashRegister? @relation(fields: [cashRegisterId], references: [id], onDelete: SetNull)
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  customerName     String?
+  customerPhone    String?
+  customerDocument String?
+
+  unitId String
+  unit   Unit   @relation(fields: [unitId], references: [id])
+
+  commissionRate   Decimal? @db.Decimal(5, 2)
+  commissionAmount Decimal? @db.Decimal(12, 2)
+
+  items     SaleItem[]
+  payments  SalePayment[]
+  tradeIn   TradeIn?
+  movements StockMovement[]
+
+  @@index([unitId])
+  @@index([saleDate])
+  @@index([customerId])
+  @@index([sellerId])
+  @@index([cashierId])
+  @@map("sales")
+}
+
+/// Uma das formas de pagamento de uma venda. Existe sempre — inclusive quando
+/// a venda tem forma única.
+model SalePayment {
+  id           String        @id @default(uuid())
+  method       PaymentMethod
+  amount       Decimal       @db.Decimal(12, 2)
+  installments Int           @default(1)
+
+  feePercent  Decimal? @db.Decimal(6, 2)
+  netAmount   Decimal? @db.Decimal(12, 2)
+  bandeira    String?
+  autorizacao String?
+
+  settledAt     DateTime?
+  settledMethod PaymentMethod?
+  settledById   String?
+  notes         String?
+  destino       String?
+
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([saleId])
+  @@index([method])
+  @@map("sale_payments")
+}
+
+model SaleItem {
+  id       String @id @default(uuid())
+  quantity Int
+
+  unitPrice Decimal @db.Decimal(12, 2)
+  /// Custo no momento da venda: o lucro histórico não muda depois.
+  costPrice Decimal @default(0) @db.Decimal(12, 2)
+
+  /// Identificação da peça vendida (produto UNITARIO).
+  imei         String?
+  serialNumber String?
+
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String?
+
+  /// Aparelho físico consumido, quando o produto é UNITARIO.
+  device DeviceUnit?
+
+  commissionAmount Decimal? @db.Decimal(12, 2)
+
+  @@index([saleId])
+  @@index([productId])
+  @@index([imei])
+  @@index([serialNumber])
+  @@map("sale_items")
+}
+
+/// Intenção de venda montada pelo vendedor. NÃO mexe no estoque.
+model PreSale {
+  id     String        @id @default(uuid())
+  code   String        @unique
+  status PreSaleStatus @default(AGUARDANDO_CAIXA)
+
+  totalAmount   Decimal        @default(0) @db.Decimal(12, 2)
+  paymentMethod PaymentMethod?
+  installments  Int            @default(1)
+  notes         String?
+
+  customerId       String?
+  customer         Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName     String
+  customerPhone    String?
+  customerDocument String?
+
+  sellerId String
+  seller   User   @relation("vendedorPreVenda", fields: [sellerId], references: [id])
+
+  cashierId String?
+  cashier   User?   @relation("caixaPreVenda", fields: [cashierId], references: [id], onDelete: SetNull)
+
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+
+  items   PreSaleItem[]
+  sale    Sale?
+  tradeIn TradeIn?
+
+  @@index([status])
+  @@index([sellerId])
+  @@index([createdAt])
+  @@map("pre_sales")
+}
+
+model PreSaleItem {
+  id       String @id @default(uuid())
+  quantity Int
+
+  unitPrice    Decimal @db.Decimal(12, 2)
+  imei         String?
+  serialNumber String?
+  /// Aparelho físico escolhido pelo vendedor (produto UNITARIO). Não reserva.
+  deviceId     String?
+
+  preSaleId String
+  preSale   PreSale @relation(fields: [preSaleId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String?
+
+  @@index([preSaleId])
+  @@index([productId])
+  @@map("pre_sale_items")
+}
+
+/// Turno do caixa: abertura, vendas do período e fechamento.
+model CashRegister {
+  id     String             @id @default(uuid())
+  code   String             @unique
+  status CashRegisterStatus @default(ABERTO)
+
+  cashierId String
+  cashier   User   @relation("turnoDoCaixa", fields: [cashierId], references: [id])
+
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  openedAt DateTime  @default(now())
+  closedAt DateTime?
+
+  summary Json?
+  notes   String?
+
+  sales Sale[]
+
+  @@index([cashierId])
+  @@index([status])
+  @@map("cash_registers")
+}
+
+/// Aviso na tela para um usuário específico.
+model Notification {
+  id      String  @id @default(uuid())
+  title   String
+  message String
+  link    String?
+  read    Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+/// Contador para os números visíveis (PV-000001, VD-000001).
+model Sequence {
+  name  String @id
+  value Int    @default(0)
+
+  @@map("sequences")
+}
+
+/// Saldo de um produto numa unidade. É a fonte da verdade do estoque.
+model Stock {
+  id        String   @id @default(uuid())
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  unitId String
+  unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, unitId])
+  @@index([unitId])
+  @@map("stock")
+}
+
+/// Histórico de tudo que mexeu no estoque. Nunca é apagado.
+model StockMovement {
+  id       String         @id @default(uuid())
+  type     MovementType
+  reason   MovementReason @default(OUTRO)
+  quantity Int
+
+  previousQuantity Int?
+  newQuantity      Int?
+
+  unitCost         Decimal? @db.Decimal(12, 2)
+  averageCostAfter Decimal? @db.Decimal(12, 2)
+
+  /// Aparelho físico afetado, quando a movimentação é de um produto UNITARIO.
+  deviceId String?
+
+  notes     String?
+  createdAt DateTime @default(now())
+
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String?
+
+  unitId String?
+  unit   Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  originUnitId      String?
+  destinationUnitId String?
+
+  referenceId String?
+
+  saleId String?
+  sale   Sale?   @relation(fields: [saleId], references: [id], onDelete: SetNull)
+
+  transferId String?
+  transfer   StockTransfer? @relation(fields: [transferId], references: [id], onDelete: SetNull)
+
+  withdrawalId String?
+  withdrawal   StockWithdrawal? @relation(fields: [withdrawalId], references: [id], onDelete: SetNull)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([type])
+  @@index([productId])
+  @@index([unitId])
+  @@index([deviceId])
+  @@map("stock_movements")
+}
+
+/// Retirada do estoque para a loja.
+model StockWithdrawal {
+  id               String           @id @default(uuid())
+  quantity         Int
+  soldQuantity     Int?
+  returnedQuantity Int?
+  status           WithdrawalStatus @default(PENDENTE)
+  notes            String?
+
+  createdAt  DateTime  @default(now())
+  approvedAt DateTime?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  unitId String
+  unit   Unit   @relation(fields: [unitId], references: [id])
+
+  requestedById String?
+  approvedById  String?
+
+  movements StockMovement[]
+
+  @@index([status])
+  @@index([productId, unitId])
+  @@map("stock_withdrawals")
+}
+
+/// Transferência entre unidades. Gera sempre duas movimentações ligadas.
+model StockTransfer {
+  id       String         @id @default(uuid())
+  quantity Int
+  status   TransferStatus @default(RECEBIDA)
+  notes    String?
+
+  createdAt  DateTime  @default(now())
+  receivedAt DateTime?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  originUnitId String
+  originUnit   Unit   @relation("origem", fields: [originUnitId], references: [id])
+
+  destinationUnitId String
+  destinationUnit   Unit   @relation("destino", fields: [destinationUnitId], references: [id])
+
+  requestedById String?
+  receivedById  String?
+
+  movements StockMovement[]
+
+  @@index([createdAt])
+  @@index([status])
+  @@map("stock_transfers")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([entity])
+  @@map("audit_logs")
+}
+
+/// Chave/valor interno — guarda, entre outras coisas, o segredo do login.
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
