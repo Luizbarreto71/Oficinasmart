@@ -1,0 +1,78 @@
+import { Button } from '@/components/ui/Button';
+import { Field, Input } from '@/components/ui/Field';
+import { useAuth } from '@/contexts/AuthContext';
+import { Wrench } from 'lucide-react';
+import { useState } from 'react';
+
+export function LoginPage() {
+  const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
+
+  const enviar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErro('');
+    setCarregando(true);
+    try {
+      await login(email, password);
+    } catch (err) {
+      setErro(err instanceof Error ? err.message : 'Não foi possível entrar.');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-full items-center justify-center bg-slate-100 p-4 dark:bg-navy-950">
+      <div className="w-full max-w-sm">
+        <div className="mb-6 flex flex-col items-center gap-3 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-white">
+            <Wrench className="h-7 w-7" />
+          </div>
+          <div>
+            <h1 className="text-lg font-extrabold text-navy-900 dark:text-slate-100">Oficina do Smartphone</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Gestão de estoque e vendas</p>
+          </div>
+        </div>
+
+        <form onSubmit={enviar} className="card space-y-4 p-6">
+          <Field label="E-mail">
+            <Input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </Field>
+          <Field label="Senha">
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Field>
+
+          {erro && (
+            <p className="rounded-lg bg-danger-bg px-3 py-2 text-sm font-medium text-danger dark:bg-danger/15">
+              {erro}
+            </p>
+          )}
+
+          <Button type="submit" className="w-full" size="lg" loading={carregando}>
+            Entrar
+          </Button>
+        </form>
+
+        <p className="mt-4 text-center text-xs text-slate-400">
+          Sem acesso? Peça ao administrador para criar seu usuário.
+        </p>
+      </div>
+    </div>
+  );
+}
