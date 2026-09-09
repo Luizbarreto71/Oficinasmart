@@ -18,12 +18,12 @@ import {
   Smartphone,
   Target,
   Users,
-  Wrench,
   X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { pode, type Permissao } from '@/lib/permissoes';
 import { NavLink } from 'react-router-dom';
+import { LogoMark } from './LogoMark';
 
 interface NavItem {
   to: string;
@@ -67,13 +67,12 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
           collapsed && 'lg:justify-center lg:px-2',
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
-          <Wrench className="h-[18px] w-[18px]" />
-        </div>
+        <LogoMark className="h-9 w-9 shrink-0 text-white" />
         {!collapsed && (
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold leading-tight text-white">Oficina do Smartphone</p>
-            <p className="truncate text-[11px] text-slate-400">Gestão de estoque e vendas</p>
+          <div className="min-w-0 flex-1 leading-none">
+            <p className="truncate text-[10px] font-light uppercase tracking-wide text-slate-300">Oficina do</p>
+            <p className="truncate text-sm font-extrabold uppercase text-white">Smartphone</p>
+            <p className="truncate text-[9px] font-semibold uppercase tracking-[0.2em] text-slate-400">Estância</p>
           </div>
         )}
         <button
