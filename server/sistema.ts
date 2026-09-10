@@ -3,15 +3,15 @@ import ExcelJS from 'exceljs';
 import { Router } from 'express';
 import multer from 'multer';
 import { Readable } from 'stream';
-import { autenticar, somenteAdmin } from './auth';
-import { AppError, limpar, rota, validar } from './core';
+import { autenticar, somenteAdmin } from './auth.js';
+import { AppError, limpar, rota, validar } from './core.js';
 import { z } from 'zod';
-import { exigir } from './permissoes';
-import { db, registrarLog } from './db';
-import { normalizarTaxas, TAXAS_PADRAO, type TaxaDeCartao } from '../shared/taxas';
-import { LOJA_PADRAO, normalizarLoja, type DadosDaLoja } from '../shared/loja';
-import { MOTIVO_LABEL, movimentar, sincronizarSaldoUnitario, TIPO_LABEL } from './estoque';
-import { planilhaConfigurada, reescreverPlanilha, statusPlanilha } from './planilha';
+import { exigir } from './permissoes.js';
+import { db, registrarLog } from './db.js';
+import { normalizarTaxas, TAXAS_PADRAO, type TaxaDeCartao } from '../shared/taxas.js';
+import { LOJA_PADRAO, normalizarLoja, type DadosDaLoja } from '../shared/loja.js';
+import { MOTIVO_LABEL, movimentar, sincronizarSaldoUnitario, TIPO_LABEL } from './estoque.js';
+import { planilhaConfigurada, reescreverPlanilha, statusPlanilha } from './planilha.js';
 
 /** Importação de planilha, backup e integração com o Google Sheets. */
 

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
-import { AppError, limpar, naoEncontrado, rota, validar } from './core';
-import { db, registrarLog } from './db';
+import { autenticar, somenteAdmin } from './auth.js';
+import { AppError, limpar, naoEncontrado, rota, validar } from './core.js';
+import { db, registrarLog } from './db.js';
 
 /** Cadastro das unidades (Loja, Estoque…) e o filtro de acesso por unidade. */
 

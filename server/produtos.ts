@@ -1,13 +1,13 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
-import { AppError, contem, limpar, naoEncontrado, ordenar, paginacao, paginado, rota, validar, semVazios } from './core';
-import { db, registrarLog } from './db';
-import { exigir } from './permissoes';
-import { comAsFilhas, estoqueBaixo, movimentar, saldo, sincronizarSaldoUnitario } from './estoque';
-import { unidadeDeVenda } from './sistema';
-import { exigirAcessoNaUnidade, unidadePermitida } from './unidades';
+import { autenticar, somenteAdmin } from './auth.js';
+import { AppError, contem, limpar, naoEncontrado, ordenar, paginacao, paginado, rota, validar, semVazios } from './core.js';
+import { db, registrarLog } from './db.js';
+import { exigir } from './permissoes.js';
+import { comAsFilhas, estoqueBaixo, movimentar, saldo, sincronizarSaldoUnitario } from './estoque.js';
+import { unidadeDeVenda } from './sistema.js';
+import { exigirAcessoNaUnidade, unidadePermitida } from './unidades.js';
 
 /** Cadastro, busca, edição, ajuste de estoque e exclusão de produtos. */
 

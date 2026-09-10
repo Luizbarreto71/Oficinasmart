@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
-import { exigir } from './permissoes';
+import { autenticar, somenteAdmin } from './auth.js';
+import { exigir } from './permissoes.js';
 import {
   AppError,
   contem,
@@ -14,9 +14,9 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { custoMedio } from '../shared/custo';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { custoMedio } from '../shared/custo.js';
 import {
   cancelarTransferencia,
   comAsFilhas,
@@ -24,8 +24,8 @@ import {
   movimentar,
   saldoTotal,
   transferir,
-} from './estoque';
-import { exigirAcessoNaUnidade, unidadePermitida } from './unidades';
+} from './estoque.js';
+import { exigirAcessoNaUnidade, unidadePermitida } from './unidades.js';
 
 /** Entrada, saída, transferência e o histórico de tudo isso (produtos por quantidade). */
 

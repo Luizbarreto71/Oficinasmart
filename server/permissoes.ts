@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { AppError } from './core';
+import { AppError } from './core.js';
 
 /**
  * Quem pode o quê.

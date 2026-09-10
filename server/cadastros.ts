@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
-import { AppError, contem, limpar, naoEncontrado, paginacao, paginado, rota, validar, semVazios } from './core';
-import { db, registrarLog } from './db';
-import { proximaCor } from '../shared/cores';
-import { camposParaJson, normalizarCampos, PADRAO_GENERICO, PADROES } from '../shared/campos';
+import { autenticar, somenteAdmin } from './auth.js';
+import { AppError, contem, limpar, naoEncontrado, paginacao, paginado, rota, validar, semVazios } from './core.js';
+import { db, registrarLog } from './db.js';
+import { proximaCor } from '../shared/cores.js';
+import { camposParaJson, normalizarCampos, PADRAO_GENERICO, PADROES } from '../shared/campos.js';
 
 /** Categorias, fornecedores, clientes, usuários e o log de auditoria. */
 

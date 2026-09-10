@@ -1,11 +1,11 @@
 import { PaymentMethod, Prisma } from '@prisma/client';
-import { seminovosDaTroca } from './seminovos';
-import { AppError, naoEncontrado } from './core';
-import { taxaDe, type TaxaDeCartao } from '../shared/taxas';
-import { taxasDoCartao, unidadeDeVenda } from './sistema';
-import { db } from './db';
-import { disponivel, movimentar } from './estoque';
-import { notificar } from './notificacoes';
+import { seminovosDaTroca } from './seminovos.js';
+import { AppError, naoEncontrado } from './core.js';
+import { taxaDe, type TaxaDeCartao } from '../shared/taxas.js';
+import { taxasDoCartao, unidadeDeVenda } from './sistema.js';
+import { db } from './db.js';
+import { disponivel, movimentar } from './estoque.js';
+import { notificar } from './notificacoes.js';
 
 /**
  * Onde a venda realmente acontece.

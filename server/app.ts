@@ -1,25 +1,25 @@
 import compression from 'compression';
 import express, { type Application } from 'express';
 import helmet from 'helmet';
-import { rotasAuth } from './auth';
-import { rotasCategorias, rotasClientes, rotasFornecedores, rotasUsuarios } from './cadastros';
-import { rota, tratarErros } from './core';
-import { rotasDashboard } from './dashboard';
-import { bancoConfigurado, bancoIniciado, db, erroDoBanco, comoConectamos } from './db';
-import { rotasDevices } from './devices';
-import { rotasMovimentacoes } from './movimentacoes';
-import { rotasFotos, rotasProdutos } from './produtos';
-import { rotasRelatorios } from './relatorios';
-import { rotasSistema } from './sistema';
-import { rotasUnidades } from './unidades';
-import { rotasCaixa } from './caixa';
-import { rotasNotificacoes } from './notificacoes';
-import { rotasPreVendas } from './prevendas';
-import { rotasEmAberto } from './aberto';
-import { rotasTrocas } from './trocas';
-import { rotasMetas } from './metas';
-import { rotasSeminovos } from './seminovos';
-import { rotasVendas } from './vendas';
+import { rotasAuth } from './auth.js';
+import { rotasCategorias, rotasClientes, rotasFornecedores, rotasUsuarios } from './cadastros.js';
+import { rota, tratarErros } from './core.js';
+import { rotasDashboard } from './dashboard.js';
+import { bancoConfigurado, bancoIniciado, db, erroDoBanco, comoConectamos } from './db.js';
+import { rotasDevices } from './devices.js';
+import { rotasMovimentacoes } from './movimentacoes.js';
+import { rotasFotos, rotasProdutos } from './produtos.js';
+import { rotasRelatorios } from './relatorios.js';
+import { rotasSistema } from './sistema.js';
+import { rotasUnidades } from './unidades.js';
+import { rotasCaixa } from './caixa.js';
+import { rotasNotificacoes } from './notificacoes.js';
+import { rotasPreVendas } from './prevendas.js';
+import { rotasEmAberto } from './aberto.js';
+import { rotasTrocas } from './trocas.js';
+import { rotasMetas } from './metas.js';
+import { rotasSeminovos } from './seminovos.js';
+import { rotasVendas } from './vendas.js';
 
 /**
  * Monta a API. Usado igual em dois lugares:

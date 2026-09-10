@@ -1,7 +1,7 @@
 import { PaymentMethod, Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
+import { autenticar } from './auth.js';
 import {
   AppError,
   dataHoraBR,
@@ -12,11 +12,11 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { decimal, exportar, reais } from './exportar';
-import { exigir, podeFazer } from './permissoes';
-import { proximoCodigo } from './vendas-service';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { decimal, exportar, reais } from './exportar.js';
+import { exigir, podeFazer } from './permissoes.js';
+import { proximoCodigo } from './vendas-service.js';
 
 /**
  * Turno do caixa: abre, recebe as vendas do período e fecha com o resumo

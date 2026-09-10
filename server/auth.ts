@@ -3,8 +3,8 @@ import crypto from 'crypto';
 import { Router, type NextFunction, type Request, type Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
-import { AppError, rota, validar } from './core';
-import { db, registrarLog } from './db';
+import { AppError, rota, validar } from './core.js';
+import { db, registrarLog } from './db.js';
 
 /** Login, tokens e proteção das rotas. */
 

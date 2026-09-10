@@ -1,8 +1,8 @@
 import { Prisma } from '@prisma/client';
-import { seminovosDaTroca } from './seminovos';
+import { seminovosDaTroca } from './seminovos.js';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
+import { autenticar } from './auth.js';
 import {
   AppError,
   intervalo,
@@ -14,13 +14,13 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { disponivel } from './estoque';
-import { notificar, notificarPerfil } from './notificacoes';
-import { exigirChaveSeAbaixoDoMinimo } from './preco-minimo';
-import { exigir, podeFazer } from './permissoes';
-import { proximoCodigo, registrarVenda } from './vendas-service';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { disponivel } from './estoque.js';
+import { notificar, notificarPerfil } from './notificacoes.js';
+import { exigirChaveSeAbaixoDoMinimo } from './preco-minimo.js';
+import { exigir, podeFazer } from './permissoes.js';
+import { proximoCodigo, registrarVenda } from './vendas-service.js';
 
 /**
  * Pré-venda: a intenção de venda montada pelo vendedor.

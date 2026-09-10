@@ -1,5 +1,5 @@
-import { createApp } from './app';
-import { db } from './db';
+import { createApp } from './app.js';
+import { db } from './db.js';
 
 /**
  * Sobe a API sozinha, para testar com curl/Insomnia (`npm run dev:api`).

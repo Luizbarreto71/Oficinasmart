@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
+import { autenticar } from './auth.js';
 import {
   AppError,
   contem,
@@ -13,10 +13,10 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { exigir } from './permissoes';
-import { unidadePermitida } from './unidades';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { exigir } from './permissoes.js';
+import { unidadePermitida } from './unidades.js';
 
 /**
  * O que a loja tem a receber. Quando o caixa fecha uma venda com "valor em

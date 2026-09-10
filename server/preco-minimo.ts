@@ -1,6 +1,6 @@
-import { AppError, numero } from './core';
-import { db } from './db';
-import { conferirChaveDeAcesso, temChaveDeAcesso } from './sistema';
+import { AppError, numero } from './core.js';
+import { db } from './db.js';
+import { conferirChaveDeAcesso, temChaveDeAcesso } from './sistema.js';
 
 /**
  * O preço de atacado é o piso da venda.

@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
-import { AppError, dataBR, fimDoDia, inicioDoDia, numero, rota, semVazios, validar } from './core';
-import { db } from './db';
-import { decimal, exportar, reais } from './exportar';
-import { exigir } from './permissoes';
-import { unidadePermitida } from './unidades';
-import { metaDeVendas } from './sistema';
+import { autenticar } from './auth.js';
+import { AppError, dataBR, fimDoDia, inicioDoDia, numero, rota, semVazios, validar } from './core.js';
+import { db } from './db.js';
+import { decimal, exportar, reais } from './exportar.js';
+import { exigir } from './permissoes.js';
+import { unidadePermitida } from './unidades.js';
+import { metaDeVendas } from './sistema.js';
 
 /**
  * Metas de venda por vendedor. A meta é diária: tantos aparelhos por dia,

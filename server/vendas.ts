@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
+import { autenticar, somenteAdmin } from './auth.js';
 import {
   AppError,
   contem,
@@ -15,15 +15,15 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { exigirChaveSeAbaixoDoMinimo } from './preco-minimo';
-import { enviarRecibo } from './recibo';
-import { lojaSalva } from './sistema';
-import { comAsFilhas, movimentar, sincronizarSaldoUnitario } from './estoque';
-import { exigir } from './permissoes';
-import { unidadePermitida } from './unidades';
-import { registrarVenda } from './vendas-service';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { exigirChaveSeAbaixoDoMinimo } from './preco-minimo.js';
+import { enviarRecibo } from './recibo.js';
+import { lojaSalva } from './sistema.js';
+import { comAsFilhas, movimentar, sincronizarSaldoUnitario } from './estoque.js';
+import { exigir } from './permissoes.js';
+import { unidadePermitida } from './unidades.js';
+import { registrarVenda } from './vendas-service.js';
 
 /** Vendas concluídas: consulta, PDV direto e cancelamento. */
 

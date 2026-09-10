@@ -1,6 +1,6 @@
 import type { Application } from 'express';
 import type { IncomingMessage, ServerResponse } from 'http';
-import { createApp } from './app';
+import { createApp } from './app.js';
 
 /**
  * Ponto de entrada da API na Vercel.

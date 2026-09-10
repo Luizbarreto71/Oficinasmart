@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import PDFDocument from 'pdfkit';
-import { PAGAMENTO_LABEL } from './core';
-import { linhaDeCidade, linhaDeEndereco, type DadosDaLoja } from '../shared/loja';
+import { PAGAMENTO_LABEL } from './core.js';
+import { linhaDeCidade, linhaDeEndereco, type DadosDaLoja } from '../shared/loja.js';
 
 const AZUL = '#0F172A';
 const CINZA = '#475569';

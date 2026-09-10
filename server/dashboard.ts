@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { autenticar } from './auth';
-import { fimDoDia, FUSO_DA_LOJA, inicioDoDia, limpar, numero, rota, somarDias } from './core';
-import { exigir } from './permissoes';
-import { db } from './db';
-import { estoqueBaixo, totalEmEstoque, valorDoEstoque } from './estoque';
-import { unidadePermitida } from './unidades';
+import { autenticar } from './auth.js';
+import { fimDoDia, FUSO_DA_LOJA, inicioDoDia, limpar, numero, rota, somarDias } from './core.js';
+import { exigir } from './permissoes.js';
+import { db } from './db.js';
+import { estoqueBaixo, totalEmEstoque, valorDoEstoque } from './estoque.js';
+import { unidadePermitida } from './unidades.js';
 
 /**
  * Cards, gráfico e alertas da tela inicial.

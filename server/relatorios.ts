@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
+import { autenticar } from './auth.js';
 import {
   AppError,
   PAGAMENTO_LABEL,
@@ -13,16 +13,16 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { exigir } from './permissoes';
-import { db } from './db';
-import { decimal, exportar, reais, type Coluna } from './exportar';
-import { comAsFilhas, MOTIVO_LABEL, STATUS_PRODUTO_LABEL, TIPO_LABEL } from './estoque';
-import { unidadePermitida } from './unidades';
-import { compararProdutos } from '../shared/ordenar';
-import { montarListaDeAtacado } from './lista-atacado';
-import { emojisDeCategoria, taxasDoCartao } from './sistema';
-import { taxaDe } from '../shared/taxas';
+} from './core.js';
+import { exigir } from './permissoes.js';
+import { db } from './db.js';
+import { decimal, exportar, reais, type Coluna } from './exportar.js';
+import { comAsFilhas, MOTIVO_LABEL, STATUS_PRODUTO_LABEL, TIPO_LABEL } from './estoque.js';
+import { unidadePermitida } from './unidades.js';
+import { compararProdutos } from '../shared/ordenar.js';
+import { montarListaDeAtacado } from './lista-atacado.js';
+import { emojisDeCategoria, taxasDoCartao } from './sistema.js';
+import { taxaDe } from '../shared/taxas.js';
 
 /** Os relatórios, todos exportáveis em PDF, Excel ou CSV. */
 

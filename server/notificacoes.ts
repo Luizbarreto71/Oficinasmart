@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
-import { limpar, paginacao, paginado, rota, semVazios, validar } from './core';
-import { db } from './db';
+import { autenticar } from './auth.js';
+import { limpar, paginacao, paginado, rota, semVazios, validar } from './core.js';
+import { db } from './db.js';
 
 /**
  * Avisos na tela: o caixa sabe que chegou pré-venda, o vendedor sabe que

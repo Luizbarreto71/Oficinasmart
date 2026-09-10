@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar, somenteAdmin } from './auth';
+import { autenticar, somenteAdmin } from './auth.js';
 import {
   AppError,
   contem,
@@ -12,13 +12,13 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { exigir } from './permissoes';
-import { sincronizarSaldoUnitario } from './estoque';
-import { darEntradaDeAparelhos } from './produtos';
-import { exigirAcessoNaUnidade, unidadePermitida } from './unidades';
-import { imeiValido } from '../shared/trocas';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { exigir } from './permissoes.js';
+import { sincronizarSaldoUnitario } from './estoque.js';
+import { darEntradaDeAparelhos } from './produtos.js';
+import { exigirAcessoNaUnidade, unidadePermitida } from './unidades.js';
+import { imeiValido } from '../shared/trocas.js';
 
 /** Aparelhos físicos (DeviceUnit) dos produtos controlados por unidade. */
 

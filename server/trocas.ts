@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
+import { autenticar } from './auth.js';
 import {
   AppError,
   limpar,
@@ -11,12 +11,12 @@ import {
   rota,
   semVazios,
   validar,
-} from './core';
-import { db, registrarLog } from './db';
-import { notificarPerfil } from './notificacoes';
-import { exigir, podeFazer } from './permissoes';
-import { proximoCodigo } from './vendas-service';
-import { DEFEITOS, imeiValido } from '../shared/trocas';
+} from './core.js';
+import { db, registrarLog } from './db.js';
+import { notificarPerfil } from './notificacoes.js';
+import { exigir, podeFazer } from './permissoes.js';
+import { proximoCodigo } from './vendas-service.js';
+import { DEFEITOS, imeiValido } from '../shared/trocas.js';
 
 export const rotasTrocas = Router();
 rotasTrocas.use(autenticar);

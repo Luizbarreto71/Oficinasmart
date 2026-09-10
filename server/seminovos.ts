@@ -1,12 +1,12 @@
 import { Prisma } from '@prisma/client';
 import { Router } from 'express';
 import { z } from 'zod';
-import { autenticar } from './auth';
-import { AppError, limpar, naoEncontrado, numero, paginacao, paginado, rota, validar } from './core';
-import { db, registrarLog } from './db';
-import { sincronizarSaldoUnitario } from './estoque';
-import { exigir } from './permissoes';
-import { unidadePermitida } from './unidades';
+import { autenticar } from './auth.js';
+import { AppError, limpar, naoEncontrado, numero, paginacao, paginado, rota, validar } from './core.js';
+import { db, registrarLog } from './db.js';
+import { sincronizarSaldoUnitario } from './estoque.js';
+import { exigir } from './permissoes.js';
+import { unidadePermitida } from './unidades.js';
 
 /**
  * Aparelhos usados que a loja recebeu.

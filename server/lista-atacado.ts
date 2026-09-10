@@ -1,4 +1,4 @@
-import { FUSO_DA_LOJA } from './core';
+import { FUSO_DA_LOJA } from './core.js';
 import {
   emojiSugerido,
   familiaDoProduto,
@@ -7,8 +7,8 @@ import {
   RISCO_CATEGORIA,
   RISCO_TOPO,
   saudacao,
-} from '../shared/lista-atacado';
-import { compararProdutos } from '../shared/ordenar';
+} from '../shared/lista-atacado.js';
+import { compararProdutos } from '../shared/ordenar.js';
 
 /** O que o gerador precisa saber de cada produto. */
 export type ProdutoDaLista = {

@@ -1,7 +1,7 @@
 import { DeviceStatus, MovementReason, MovementType, Prisma } from '@prisma/client';
-import { AppError } from './core';
-import { db } from './db';
-import { enviarParaPlanilha, planilhaConfigurada } from './planilha';
+import { AppError } from './core.js';
+import { db } from './db.js';
+import { enviarParaPlanilha, planilhaConfigurada } from './planilha.js';
 
 /**
  * Todo movimento de estoque passa por aqui.
