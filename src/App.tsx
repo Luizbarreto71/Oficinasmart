@@ -18,6 +18,7 @@ const CaixaPage = lazy(() => import('./pages/CaixaPage'));
 const PreSalePage = lazy(() => import('./pages/PreSalePage'));
 const EmAbertoPage = lazy(() => import('./pages/EmAbertoPage'));
 const TrocasPage = lazy(() => import('./pages/TrocasPage'));
+const AssistenciaPage = lazy(() => import('./pages/AssistenciaPage'));
 const MetasPage = lazy(() => import('./pages/MetasPage'));
 const SeminovosPage = lazy(() => import('./pages/SeminovosPage'));
 
@@ -73,6 +74,7 @@ export function App() {
         <Route path="/caixa" element={<Tela permissao="pdv"><CaixaPage /></Tela>} />
         <Route path="/pre-vendas" element={<Tela permissao="prevenda.criar"><PreSalePage /></Tela>} />
         <Route path="/trocas" element={<Tela permissao="troca.criar"><TrocasPage /></Tela>} />
+        <Route path="/assistencia" element={<Tela permissao="os.ver"><AssistenciaPage /></Tela>} />
         <Route path="/em-aberto" element={<Tela permissao="prevenda.verTodas"><EmAbertoPage /></Tela>} />
         <Route path="/metas" element={<Tela permissao="relatorios"><MetasPage /></Tela>} />
         <Route path="/seminovos" element={<Tela permissao="estoque.tela"><SeminovosPage /></Tela>} />

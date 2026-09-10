@@ -10,6 +10,7 @@ import {
   metaService,
   movementService,
   notificacaoService,
+  ordemService,
   preVendaService,
   productService,
   saleService,
@@ -20,6 +21,7 @@ import {
   unitService,
   userService,
   type MovementFilters,
+  type OrdemFilters,
   type ProductFilters,
   type SaleFilters,
 } from '@/services';
@@ -491,6 +493,39 @@ export function useTroca(acao: 'criar' | 'anatel' | 'recusar' | 'excluir') {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['trocas'] });
       void qc.invalidateQueries({ queryKey: ['pre-sales'] });
+    },
+  });
+}
+
+// ------------------------------------------------------- Ordem de Serviço
+
+export const useOrdens = (filtros: OrdemFilters = {}) =>
+  useQuery({
+    queryKey: ['service-orders', 'lista', filtros],
+    queryFn: () => ordemService.listar(filtros),
+    placeholderData: (previous) => previous,
+    refetchInterval: 45_000,
+    staleTime: 15_000,
+  });
+
+export const useOrdem = (id?: string) =>
+  useQuery({
+    queryKey: ['service-orders', 'item', id],
+    queryFn: () => ordemService.buscar(id!),
+    enabled: Boolean(id),
+  });
+
+export function useAcaoDeOrdem<T>(acao: (v: T) => Promise<unknown>) {
+  const qc = useQueryClient();
+  return useMutation<{ message: string } & Record<string, unknown>, Error, T>({
+    mutationFn: (v) =>
+      acao(v).catch((e) => {
+        throw new Error(getErrorMessage(e));
+      }) as Promise<{ message: string } & Record<string, unknown>>,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['service-orders'] });
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      invalidateStock(qc);
     },
   });
 }

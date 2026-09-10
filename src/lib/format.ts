@@ -113,6 +113,33 @@ export const REASON_LABEL: Record<MovementReason, string> = {
   CANCELAMENTO: 'Cancelamento',
   EXCLUSAO: 'Exclusão',
   OUTRO: 'Outro',
+  REPARO: 'Reparo (Ordem de Serviço)',
+};
+
+export const OS_STATUS_LABEL: Record<string, string> = {
+  RECEBIDO: 'Recebido',
+  EM_ANALISE: 'Em análise',
+  ORCAMENTO: 'Orçamento enviado',
+  APROVADO: 'Aprovado',
+  EM_REPARO: 'Em reparo',
+  AGUARDANDO_PECA: 'Aguardando peça',
+  PRONTO: 'Pronto para retirada',
+  ENTREGUE: 'Entregue',
+  RECUSADO: 'Recusado',
+  CANCELADO: 'Cancelado',
+};
+
+export const OS_STATUS_TONE: Record<string, 'neutral' | 'success' | 'danger' | 'warning' | 'info' | 'accent'> = {
+  RECEBIDO: 'neutral',
+  EM_ANALISE: 'info',
+  ORCAMENTO: 'warning',
+  APROVADO: 'accent',
+  EM_REPARO: 'info',
+  AGUARDANDO_PECA: 'warning',
+  PRONTO: 'success',
+  ENTREGUE: 'success',
+  RECUSADO: 'danger',
+  CANCELADO: 'danger',
 };
 
 export const EXIT_REASONS: MovementReason[] = [

@@ -18,6 +18,8 @@ import type {
   ResumoDoCaixa,
   Sale,
   SalesPage,
+  ServiceOrder,
+  ServiceOrdersPage,
   StockPageResult,
   Supplier,
   Transfer,
@@ -248,6 +250,56 @@ export const trocaService = {
     api.post<Troca>(`/trocas/${id}/anatel`, data).then((r) => r.data),
   recusar: (id: string) => api.post<{ message: string }>(`/trocas/${id}/recusar`).then((r) => r.data),
   excluir: (id: string) => api.delete<{ message: string }>(`/trocas/${id}`).then((r) => r.data),
+};
+
+// -------------------------------------------------------- Ordem de Serviço
+
+export interface OrdemFilters {
+  status?: string;
+  abertas?: string;
+  search?: string;
+  unitId?: string;
+  technicianId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export const ordemService = {
+  listar: (filtros: OrdemFilters = {}) =>
+    api.get<ServiceOrdersPage>('/service-orders', { params: clean(filtros) }).then((r) => r.data),
+  buscar: (id: string) => api.get<ServiceOrder>(`/service-orders/${id}`).then((r) => r.data),
+  criar: (data: Record<string, unknown>) =>
+    api.post<ServiceOrder & { message: string }>('/service-orders', data).then((r) => r.data),
+  editar: (id: string, data: Record<string, unknown>) =>
+    api.put<ServiceOrder & { message: string }>(`/service-orders/${id}`, data).then((r) => r.data),
+  status: (id: string, status: string) =>
+    api
+      .post<ServiceOrder & { message: string }>(`/service-orders/${id}/status`, { status })
+      .then((r) => r.data),
+  orcar: (id: string, data: Record<string, unknown>) =>
+    api
+      .post<ServiceOrder & { message: string }>(`/service-orders/${id}/orcamento`, data)
+      .then((r) => r.data),
+  aprovar: (id: string) =>
+    api.post<ServiceOrder & { message: string }>(`/service-orders/${id}/aprovar`).then((r) => r.data),
+  recusar: (id: string, motivo?: string) =>
+    api
+      .post<ServiceOrder & { message: string }>(`/service-orders/${id}/recusar`, { motivo })
+      .then((r) => r.data),
+  entregar: (id: string, data: Record<string, unknown>) =>
+    api
+      .post<ServiceOrder & { sale?: { id: string; code: string; totalAmount: number }; message: string }>(
+        `/service-orders/${id}/entregar`,
+        data,
+      )
+      .then((r) => r.data),
+  cancelar: (id: string, reason?: string) =>
+    api
+      .delete<{ message: string }>(`/service-orders/${id}`, { params: clean({ reason }) })
+      .then((r) => r.data),
+  comprovanteUrl: (id: string) => `/service-orders/${id}/comprovante`,
 };
 
 export const preVendaService = {

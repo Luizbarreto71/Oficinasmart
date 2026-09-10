@@ -22,7 +22,8 @@ export type MovementReason =
   | 'RETIRADA'
   | 'CANCELAMENTO'
   | 'EXCLUSAO'
-  | 'OUTRO';
+  | 'OUTRO'
+  | 'REPARO';
 
 export type TransferStatus = 'PENDENTE' | 'EM_TRANSITO' | 'RECEBIDA' | 'CANCELADA';
 export type WithdrawalStatus = 'PENDENTE' | 'APROVADA' | 'CANCELADA';
@@ -499,6 +500,86 @@ export interface QuickSearchResult {
   products: Product[];
   sales: Sale[];
   customers: Customer[];
+}
+
+// ------------------------------------------------------- Ordem de Serviço
+
+export type ServiceOrderStatus =
+  | 'RECEBIDO'
+  | 'EM_ANALISE'
+  | 'ORCAMENTO'
+  | 'APROVADO'
+  | 'EM_REPARO'
+  | 'AGUARDANDO_PECA'
+  | 'PRONTO'
+  | 'ENTREGUE'
+  | 'RECUSADO'
+  | 'CANCELADO';
+
+export interface ServiceOrderItem {
+  id: string;
+  kind: 'PECA' | 'SERVICO';
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  costPrice: number;
+  productId?: string | null;
+  deviceUnitId?: string | null;
+}
+
+export interface ServiceOrderPhoto {
+  id: string;
+  tipo: 'ENTRADA' | 'SAIDA';
+  url: string;
+}
+
+export interface ServiceOrder {
+  id: string;
+  code: string;
+  status: ServiceOrderStatus;
+  statusLabel: string;
+  aberta: boolean;
+  customerId?: string | null;
+  customerName: string;
+  customerPhone?: string | null;
+  customerDocument?: string | null;
+  deviceBrand?: string | null;
+  deviceModel: string;
+  deviceColor?: string | null;
+  deviceImei?: string | null;
+  deviceSerial?: string | null;
+  devicePassword?: string | null;
+  accessories?: string | null;
+  conditionIn?: string | null;
+  checklistIn?: Record<string, boolean | string | number | null> | null;
+  batteryHealth?: number | null;
+  reportedProblem: string;
+  diagnosis?: string | null;
+  internalNotes?: string | null;
+  estimatedValue?: number | null;
+  quotedValue?: number | null;
+  discount: number;
+  totalAmount: number;
+  costAmount: number;
+  warrantyDays?: number | null;
+  warrantyUntil?: string | null;
+  technicianId?: string | null;
+  technician?: { id: string; name: string } | null;
+  unitId: string;
+  unit?: { id: string; name: string } | null;
+  saleId?: string | null;
+  sale?: { id: string; code: string; totalAmount: number } | null;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string | null;
+  readyAt?: string | null;
+  deliveredAt?: string | null;
+  items: ServiceOrderItem[];
+  photos: ServiceOrderPhoto[];
+}
+
+export interface ServiceOrdersPage extends Paginated<ServiceOrder> {
+  contadores: Record<string, number>;
 }
 
 export interface MetasResult {
