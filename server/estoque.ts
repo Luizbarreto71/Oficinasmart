@@ -33,6 +33,7 @@ export const MOTIVO_LABEL: Record<MovementReason, string> = {
   CANCELAMENTO: 'Cancelamento',
   EXCLUSAO: 'Exclusão',
   OUTRO: 'Outro',
+  REPARO: 'Reparo (Ordem de Serviço)',
 };
 
 export const TIPO_LABEL: Record<MovementType, string> = {

@@ -20,6 +20,7 @@ import { rotasTrocas } from './trocas.js';
 import { rotasMetas } from './metas.js';
 import { rotasSeminovos } from './seminovos.js';
 import { rotasVendas } from './vendas.js';
+import { rotasOrdens } from './ordens.js';
 
 /**
  * Monta a API. Usado igual em dois lugares:
@@ -107,6 +108,7 @@ export function createApp(): Application {
   app.use('/api/devices', rotasDevices);
   app.use('/api/fotos', rotasFotos);
   app.use('/api/sales', rotasVendas);
+  app.use('/api/service-orders', rotasOrdens);
   app.use('/api/pre-sales', rotasPreVendas);
   app.use('/api/trocas', rotasTrocas);
   app.use('/api/seminovos', rotasSeminovos);
