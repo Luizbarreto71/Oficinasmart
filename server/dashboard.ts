@@ -16,6 +16,39 @@ import { unidadePermitida } from './unidades.js';
 export const rotasDashboard = Router();
 rotasDashboard.use(autenticar, exigir('dashboard'));
 
+/** Status de OS que ainda contam como trabalho em andamento. */
+const OS_ABERTAS = [
+  'RECEBIDO',
+  'EM_ANALISE',
+  'ORCAMENTO',
+  'APROVADO',
+  'EM_REPARO',
+  'AGUARDANDO_PECA',
+  'PRONTO',
+] as const;
+
+/**
+ * Contadores da Assistência Técnica para os cards do dashboard. Nunca lança:
+ * se a migração da assistência ainda não rodou, devolve zeros em vez de
+ * derrubar o dashboard inteiro.
+ */
+async function contadoresDeOS(naUnidade: { unitId?: string }, inicioDoMes: Date) {
+  try {
+    const [abertas, prontas, mes] = await Promise.all([
+      db.serviceOrder.count({ where: { status: { in: [...OS_ABERTAS] }, ...naUnidade } }),
+      db.serviceOrder.count({ where: { status: 'PRONTO', ...naUnidade } }),
+      db.serviceOrder.aggregate({
+        where: { status: 'ENTREGUE', deliveredAt: { gte: inicioDoMes }, ...naUnidade },
+        _count: true,
+        _sum: { totalAmount: true },
+      }),
+    ]);
+    return { abertas, prontas, entreguesMes: mes._count, faturamentoMes: numero(mes._sum?.totalAmount) };
+  } catch {
+    return { abertas: 0, prontas: 0, entreguesMes: 0, faturamentoMes: 0 };
+  }
+}
+
 rotasDashboard.get(
   '/',
   rota(async (req, res) => {
@@ -110,6 +143,10 @@ rotasDashboard.get(
       valorDoEstoque(unidade),
     ]);
 
+    // Fica fora do Promise.all e com try/catch próprio: se a migração da
+    // assistência ainda não rodou, o dashboard não pode quebrar por causa disso.
+    const ordens = await contadoresDeOS(naUnidade, inicioDoMes);
+
     const dia = (d: Date) => inicioDoDia(d).toISOString().slice(0, 10);
 
     const baldes = new Map<
@@ -166,6 +203,10 @@ rotasDashboard.get(
           revenueMonth: receitaMes,
           profitMonth: receitaMes - numero(mes._sum?.costAmount),
           itemsSoldMonth: itensMes._sum.quantity ?? 0,
+          osAbertas: ordens.abertas,
+          osProntas: ordens.prontas,
+          osEntreguesMes: ordens.entreguesMes,
+          osFaturamentoServicoMes: ordens.faturamentoMes,
           entradas: movimentosDoPeriodo
             .filter((m) => m.type === 'ENTRADA')
             .reduce((s, m) => s + m.quantity, 0),

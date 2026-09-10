@@ -15,6 +15,7 @@ import {
   PackageX,
   ShoppingCart,
   TrendingUp,
+  Wrench,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -97,6 +98,28 @@ export default function DashboardPage() {
         />
         <StatCard label="Entradas no período" value={c.entradas} />
         <StatCard label="Saídas no período" value={c.saidas} />
+
+        {c.osAbertas !== undefined && (
+          <>
+            <StatCard
+              label="OS abertas"
+              value={c.osAbertas}
+              icon={Wrench}
+              tone={c.osAbertas ? 'accent' : 'neutral'}
+            />
+            <StatCard
+              label="Prontas p/ retirada"
+              value={c.osProntas ?? 0}
+              tone={c.osProntas ? 'success' : 'neutral'}
+            />
+            <StatCard
+              label="Serviços do mês"
+              value={c.osEntreguesMes ?? 0}
+              hint={formatCurrency(c.osFaturamentoServicoMes ?? 0)}
+              tone="success"
+            />
+          </>
+        )}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

@@ -464,6 +464,10 @@ export interface DashboardData {
     revenueMonth: number;
     profitMonth: number;
     itemsSoldMonth: number;
+    osAbertas?: number;
+    osProntas?: number;
+    osEntreguesMes?: number;
+    osFaturamentoServicoMes?: number;
   };
   chart: { date: string; vendas: number; faturamento: number; entradas: number; saidas: number }[];
   categories: { categoryId: string; name: string; color: string; products: number; quantity: number }[];
