@@ -70,7 +70,36 @@ const texto = z
   .nullable()
   .transform((v) => v || null);
 
-const dinheiro = z.coerce.number().min(0, 'O valor não pode ser negativo').max(99_999_999);
+/**
+ * Converte o que o formulário mandar num número — ou em `undefined` se não der.
+ * Aceita `""`, `null`, `NaN` e o formato brasileiro ("350,00", "1.200,50").
+ * Assim um campo em branco ou meio digitado vira o padrão em vez de estourar 422.
+ */
+const paraNumero = (v: unknown): unknown => {
+  if (v === null || v === undefined) return v;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+  if (typeof v === 'string') {
+    const s = v.trim();
+    if (!s) return undefined;
+    const normal = s.includes(',') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/\s/g, '');
+    const n = Number(normal);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+};
+
+const dinheiro = z.preprocess(
+  paraNumero,
+  z.number().min(0, 'O valor não pode ser negativo').max(99_999_999),
+);
+
+/** Dinheiro que sempre tem valor: entrada bagunçada cai no padrão, nunca 422. */
+const dinheiroPadrao = (padrao: number) =>
+  z.preprocess(paraNumero, z.number().min(0).max(99_999_999)).catch(padrao).default(padrao);
+
+/** Inteiro ≥ 0 que sempre tem valor: entrada bagunçada cai no padrão. */
+const inteiroPadrao = (padrao: number) =>
+  z.preprocess(paraNumero, z.number().int().min(0)).catch(padrao).default(padrao);
 
 const foto = z.string().max(4_000_000);
 
@@ -106,12 +135,15 @@ const produtoSchema = z.object({
   condicao: texto,
   tipoControle: z.enum(['UNITARIO', 'QUANTIDADE']).default('QUANTIDADE'),
   semEstoque: z.coerce.boolean().optional(),
-  garantiaPadraoDias: z.coerce.number().int().min(0).max(3650).optional().nullable(),
-  quantity: z.coerce.number().int().min(0, 'A quantidade não pode ser negativa').default(0),
+  garantiaPadraoDias: z
+    .preprocess(paraNumero, z.number().int().min(0).max(3650))
+    .optional()
+    .nullable(),
+  quantity: inteiroPadrao(0),
   unitId: z.string().uuid().optional().nullable(),
-  minQuantity: z.coerce.number().int().min(0).default(1),
-  costPrice: dinheiro.default(0),
-  salePrice: dinheiro.default(0),
+  minQuantity: inteiroPadrao(1),
+  costPrice: dinheiroPadrao(0),
+  salePrice: dinheiroPadrao(0),
   wholesalePrice: dinheiro.optional().nullable(),
   imei: texto,
   serialNumber: texto,

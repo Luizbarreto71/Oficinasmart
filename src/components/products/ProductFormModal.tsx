@@ -26,6 +26,18 @@ interface Aparelho {
 
 const aparelhoVazio: Aparelho = { imei: '', serialNumber: '', condicao: 'Novo / Lacrado', batteryHealth: '', costPrice: '' };
 
+/**
+ * Lê um campo de número do formulário. Aceita "350,00" e "1.200,50" (jeito
+ * brasileiro) e devolve `null` quando está vazio ou digitado pela metade —
+ * assim nunca mandamos `NaN` para a API (era o que dava erro 422).
+ */
+function numero(valor: string): number | null {
+  const limpo = String(valor).trim();
+  if (!limpo) return null;
+  const n = Number(limpo.includes(',') ? limpo.replace(/\./g, '').replace(',', '.') : limpo);
+  return Number.isFinite(n) ? n : null;
+}
+
 export function ProductFormModal({ open, onClose, produto }: Props) {
   const editando = Boolean(produto);
   const { success, error } = useToast();
@@ -143,11 +155,11 @@ export function ProductFormModal({ open, onClose, produto }: Props) {
       ram: form.ram || null,
       barcode: form.barcode || null,
       condicao: form.condicao || null,
-      minQuantity: Number(form.minQuantity) || 1,
-      costPrice: Number(form.costPrice) || 0,
-      salePrice: Number(form.salePrice) || 0,
-      wholesalePrice: form.wholesalePrice ? Number(form.wholesalePrice) : null,
-      garantiaPadraoDias: form.garantiaPadraoDias ? Number(form.garantiaPadraoDias) : null,
+      minQuantity: numero(form.minQuantity) ?? 1,
+      costPrice: numero(form.costPrice) ?? 0,
+      salePrice: numero(form.salePrice) ?? 0,
+      wholesalePrice: numero(form.wholesalePrice),
+      garantiaPadraoDias: numero(form.garantiaPadraoDias),
       supplierId: form.supplierId || null,
       notes: form.notes || null,
       photos,
@@ -165,8 +177,8 @@ export function ProductFormModal({ open, onClose, produto }: Props) {
               imei: a.imei.replace(/\D/g, '') || null,
               serialNumber: a.serialNumber || null,
               condicao: a.condicao || null,
-              batteryHealth: a.batteryHealth ? Number(a.batteryHealth) : null,
-              costPrice: a.costPrice ? Number(a.costPrice) : Number(form.costPrice) || 0,
+              batteryHealth: numero(a.batteryHealth),
+              costPrice: numero(a.costPrice) ?? numero(form.costPrice) ?? 0,
             }));
           base.unitId = form.unitId || undefined;
         } else if (!form.semEstoque) {
