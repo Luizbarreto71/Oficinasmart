@@ -93,6 +93,12 @@ const dinheiro = z.preprocess(
   z.number().min(0, 'O valor não pode ser negativo').max(99_999_999),
 );
 
+/** Dinheiro que pode faltar ou vir vazio de propósito (ex.: preço de atacado). */
+const dinheiroOpcional = z.preprocess(
+  paraNumero,
+  z.number().min(0, 'O valor não pode ser negativo').max(99_999_999).nullish(),
+);
+
 /** Dinheiro que sempre tem valor: entrada bagunçada cai no padrão, nunca 422. */
 const dinheiroPadrao = (padrao: number) =>
   z.preprocess(paraNumero, z.number().min(0).max(99_999_999)).catch(padrao).default(padrao);
@@ -100,6 +106,10 @@ const dinheiroPadrao = (padrao: number) =>
 /** Inteiro ≥ 0 que sempre tem valor: entrada bagunçada cai no padrão. */
 const inteiroPadrao = (padrao: number) =>
   z.preprocess(paraNumero, z.number().int().min(0)).catch(padrao).default(padrao);
+
+/** Inteiro ≥ 0 que pode faltar ou vir vazio (ex.: garantia padrão em dias). */
+const inteiroOpcional = (max: number) =>
+  z.preprocess(paraNumero, z.number().int().min(0).max(max).nullish());
 
 const foto = z.string().max(4_000_000);
 
@@ -111,8 +121,8 @@ const aparelhoNoCadastro = z.object({
   condicao: z.string().trim().max(40).optional().nullable(),
   batteryHealth: z.coerce.number().int().min(0).max(100).optional().nullable(),
   warrantyUntil: z.coerce.date().optional().nullable(),
-  costPrice: dinheiro.optional(),
-  salePrice: dinheiro.optional().nullable(),
+  costPrice: dinheiroOpcional,
+  salePrice: dinheiroOpcional,
   imeiSituacao: z.enum(['NAO_CONSULTADO', 'REGULAR', 'IRREGULAR', 'BLOQUEADO']).optional(),
   notes: z.string().trim().max(1000).optional().nullable(),
 });
@@ -135,16 +145,13 @@ const produtoSchema = z.object({
   condicao: texto,
   tipoControle: z.enum(['UNITARIO', 'QUANTIDADE']).default('QUANTIDADE'),
   semEstoque: z.coerce.boolean().optional(),
-  garantiaPadraoDias: z
-    .preprocess(paraNumero, z.number().int().min(0).max(3650))
-    .optional()
-    .nullable(),
+  garantiaPadraoDias: inteiroOpcional(3650),
   quantity: inteiroPadrao(0),
   unitId: z.string().uuid().optional().nullable(),
   minQuantity: inteiroPadrao(1),
   costPrice: dinheiroPadrao(0),
   salePrice: dinheiroPadrao(0),
-  wholesalePrice: dinheiro.optional().nullable(),
+  wholesalePrice: dinheiroOpcional,
   imei: texto,
   serialNumber: texto,
   barcode: texto,
